@@ -1,6 +1,8 @@
 # Contain PHP workloads until they are patched
 
-Finding the package does not change who can reach it. The containment step is a small allow-list on those hosts while the PHP update is scheduled.
+Finding the package does not change who can reach it. The containment step is one policy set whose provider is the PHP inventory filter. Every host in that filter gets the same rules. In an estate of thousands, that is the difference between one change window and a rule per server.
+
+Tim Roth’s video description is the customer framing: patching will not finish everywhere today, and those servers should not keep unrestricted access to the rest of the network. The policies below limit who can reach the PHP tier and where that tier can go, which is the lateral-movement cut. They are in place only until the package update is confirmed.
 
 This is reachability. It is not a patch, a virtual patch, or detection of CVE-2026-109618 or CVE-2026-109619. Secure Firewall CVE-to-IPS was not checked for these CVE ids. Live Protect for applications is a later agent and is not what this example uses.
 

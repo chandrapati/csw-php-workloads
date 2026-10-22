@@ -1,6 +1,22 @@
 # Find PHP workloads with Secure Workload
 
-Thanks to Tim Roth for sharing [Discover and Segment PHP servers with Cisco Secure Workload](https://youtu.be/OSnb8eNuJHE). The UI example `Package Info = php#8.1.29-1` is the filter pattern from that work.
+Thanks to Tim Roth for sharing [Discover and Segment PHP servers with Cisco Secure Workload](https://youtu.be/OSnb8eNuJHE). His description of the video says he identifies servers running PHP, checks whether they are publicly exposed, and builds segmentation policies that limit access and reduce lateral movement while patching is still underway. Auto-generated captions did not download on 22 Oct 2026, so the click path inside the player is not transcribed here.
+
+## Why this works when there are thousands of workloads
+
+Each host agent with package visibility reports the packages it sees. Secure Workload keeps that inventory. An inventory filter runs one query against it and returns the members. You are not scrolling the agent list.
+
+Create the filter once:
+
+1. **Organize > Inventory Filters**.
+2. **Create Inventory Filter**.
+3. Enter the package query. The (i) button beside Query shows the fields the screen accepts. For this search use Package Info, for example `Package Info = php#8.1.29-1`.
+4. If the PHP hosts are spread across scopes, leave **Restrict query to ownership scope** unchecked. The [SaaS user guide](https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/3_10/cisco-secure-workload-user-guide-saas-v310/segmentation.html) uses that setting so one filter can see workloads outside a single ownership scope. The guide’s sample query on that page is a CVE. Use the package query here.
+5. Save. The member count is the number of workloads that reported the package. That count is the list you hand to the patch team and to the policy.
+
+Repeat the filter for each package string you care about. A customer who wants every PHP interpreter, not one build, adds a filter per version the inventory actually shows, or starts from a host that is known to run PHP, reads the exact `name#version`, and searches for that string. Equality against a version you have already read is the filter to trust. A less-than comparison is documented on this screen. The sort order of PHP version strings was not re-tested on 22 Oct 2026.
+
+The filter stays current. The next agent report that includes the same package adds that host. A host that moves to a fixed package leaves the filter. You do not edit a spreadsheet of a thousand names.
 
 ## UI
 
@@ -10,11 +26,19 @@ In an inventory filter, the documented comparison looks like this:
 Package Info = php#8.1.29-1
 ```
 
-Cisco’s 2021 Japan field article shows the same screen with `Package Info = php#7.2` and `Package Info < openssl#1.0.2k`, plus a separate `Package CVE` filter: [Cisco Japan, January 2021](https://gblogs.cisco.com/jp/2021/01/cisco-secure-workload_segmentation/).
+Cisco’s 2021 Japan field article shows the same screen with `Package Info = php#7.2` and `Package Info < openssl#1.0.2k`, plus a separate `Package CVE` filter: [Cisco Japan, January 2021](https://gblogs.cisco.com/jp/2021/01/cisco-secure-workload_segmentation/). On the lab tenant the interpreter package was either `php#8.1.29-1.el7.remi` or `php#5.4.16-48.el7`.
 
-Build one filter per package string you care about. On the lab tenant the interpreter package was either `php#8.1.29-1.el7.remi` or `php#5.4.16-48.el7`. A less-than comparison is documented for this screen. The sort order of PHP version strings was not re-tested on 22 Oct 2026, so equality against the version you read from a host is the filter to trust.
+Package visibility has to be enabled on the agent config profile. Packages inside a container are not assumed to appear on the host inventory. A host with no package report cannot be found by this query. The empty result means “not reported,” and those agents still need a look.
 
-Package visibility has to be enabled on the agent config profile. Packages inside a container are not assumed to appear on the host inventory.
+## Are they publicly exposed?
+
+Tim’s second step is exposure, not just presence. After the filter returns the set:
+
+- Open the flows or conversations for those workloads. The user guide’s policy review starts with critical ports and **internet-facing traffic**, then **View Conversations** and **Flow Search** for a specific policy.
+- A PHP host whose recent flows show clients from outside the organization is the one to contain first.
+- A PHP host that only talks to its own application tier is still unpatched, and it is a smaller reachability problem.
+
+The video description states that he checks public exposure. The exact screen he clicks for that check was not transcribed. Do not treat “the package is installed” as “the host is on the internet.”
 
 ## API
 

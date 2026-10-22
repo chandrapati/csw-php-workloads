@@ -2,12 +2,29 @@
 
 Field reference for customers and Cisco field. This is not an official Cisco document and not an attestation.
 
-Thanks to **Tim Roth** (YouTube: [Timothy Roth](https://www.youtube.com/@TimothyRoth)) for sharing [Discover and Segment PHP servers with Cisco Secure Workload](https://youtu.be/OSnb8eNuJHE). That video is the source for finding PHP servers and segmenting them. The lab counts and the API notes below are separate work.
+Thanks to **Tim Roth** (YouTube: [Timothy Roth](https://www.youtube.com/@TimothyRoth)) for sharing [Discover and Segment PHP servers with Cisco Secure Workload](https://youtu.be/OSnb8eNuJHE). In the video description he walks through three things a Secure Workload customer can do while a PHP patch is still outstanding:
 
-Two jobs, in this order:
+1. Identify the servers that are running PHP.
+2. See whether those servers are publicly exposed.
+3. Build segmentation policies that limit access and reduce lateral movement.
 
-1. **Find them** with Cisco Secure Workload package inventory.
-2. **Contain them until the patch** by allowing only the paths the application needs.
+His point, in short: a server that cannot be patched today should not keep unrestricted access to the rest of the network. The lab counts and the API notes below are separate from the video. Auto-generated captions for the player did not download, so this page uses his description and the product guide. It does not invent the buttons inside the video.
+
+## Among thousands of workloads
+
+A customer does not open a thousand host pages. The agents have already reported installed packages. One inventory filter is a question asked of that whole inventory.
+
+```text
+Package Info = php#8.1.29-1
+```
+
+That query returns the hosts that reported that package, in every scope you include. The result is the short list. The same filter is then the provider of one policy, so every matching host is covered by the same allow-list. A host that later reports the same package joins the filter. You do not write a new rule per server.
+
+Cisco documents the screen as **Organize > Inventory Filters > Create Inventory Filter**. Leave **Restrict query to ownership scope** unchecked when the PHP hosts sit in more than one scope. That checkbox behavior is in the Secure Workload user guide. The guide’s example query is a CVE. For this event the query that finds the hosts is the package string, because CVE-2026-109618 and CVE-2026-109619 were not in the vulnerability list of the lab host that was checked.
+
+After the filter exists, use flows on those hosts to see who talks to them, including internet-facing conversations. The user guide tells you to review internet-facing traffic, then open the conversation and Flow Search. That is how you answer Tim’s second question: which of these PHP servers are actually exposed.
+
+Then contain them. One absolute or default policy set, with the PHP filter as provider, allows the front door, the database, and the admin jump host, and denies other clients. Publish it in a lab workspace before any production enforce.
 
 The PHP project says there are no complete mitigations. **Updating PHP is the only safe choice.** Segmentation reduces who can open a connection. It does not patch PHP, and it does not stop a request that still arrives through an allowed front door.
 
@@ -28,7 +45,7 @@ On a Secure Workload SaaS lab, 22 Oct 2026, that search returned **10 hosts** wi
 - **2** at `8.1.29-1.el7.remi`
 - **8** at `5.4.16-48.el7`
 
-`8.1.29` is the June 2024 PHP security release. It is the version in Tim Roth’s filter example. The 21 Oct 2026 fixes for CVE-2026-109618 and CVE-2026-109619 are **8.5.12, 8.4.27, 8.3.36, and 8.2.35**. Those two CVE ids were not in the vulnerability list of the `8.1.29` web host that was checked. A reported package is inventory. It is not proof the host is exploitable, and it is not proof the CVE feed has mapped the CVE.
+`8.1.29` is the June 2024 PHP security release. The 21 Oct 2026 fixes for CVE-2026-109618 and CVE-2026-109619 are **8.5.12, 8.4.27, 8.3.36, and 8.2.35**. Those two CVE ids were not in the vulnerability list of the `8.1.29` web host that was checked. A reported package is inventory. It is not proof the host is exploitable, and it is not proof the CVE feed has mapped the CVE.
 
 Details: [docs/find-with-csw.md](docs/find-with-csw.md).
 
