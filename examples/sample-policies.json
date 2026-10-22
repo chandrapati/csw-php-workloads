@@ -1,0 +1,64 @@
+{
+  "status": "example-not-applied",
+  "credit": "Package discovery and segmentation approach: Tim Roth, Discover and Segment PHP servers with Cisco Secure Workload, https://youtu.be/OSnb8eNuJHE",
+  "purpose": "Shrink who can open a connection to PHP workloads while the PHP update is scheduled.",
+  "limitation": "An allowed front door can still deliver the request that reaches the bug. This file does not patch PHP and it was not sent to a cluster.",
+  "port_shape": {
+    "proto_tcp": 6,
+    "port": "[low, high], inclusive. Read from a Secure Workload policy object on 22 Oct 2026."
+  },
+  "filters": [
+    {
+      "name": "PHP-Web",
+      "ui_query": "Package Info = php#8.1.29-1",
+      "note": "Add another filter for each version you actually find, such as php#5.4.16-48.el7. Match the package name php, not php-fpm."
+    },
+    {
+      "name": "Approved-Edge",
+      "ui_query": "The reverse proxy or load balancer in front of this application."
+    },
+    {
+      "name": "App-DB",
+      "ui_query": "The database tier for this application only."
+    },
+    {
+      "name": "Admin-Jump",
+      "ui_query": "The administration jump host."
+    }
+  ],
+  "policies": [
+    {
+      "name": "allow-edge-https-to-php",
+      "action": "ALLOW",
+      "consumer": "Approved-Edge",
+      "provider": "PHP-Web",
+      "l4_params": [{ "proto": 6, "port": [443, 443] }]
+    },
+    {
+      "name": "allow-php-to-its-database",
+      "action": "ALLOW",
+      "consumer": "PHP-Web",
+      "provider": "App-DB",
+      "l4_params": [{ "proto": 6, "port": [3306, 3306] }]
+    },
+    {
+      "name": "allow-admin-ssh-to-php",
+      "action": "ALLOW",
+      "consumer": "Admin-Jump",
+      "provider": "PHP-Web",
+      "l4_params": [{ "proto": 6, "port": [22, 22] }]
+    },
+    {
+      "name": "deny-other-clients-to-php-web-ports",
+      "action": "DENY",
+      "consumer": "Other workloads in this scope",
+      "provider": "PHP-Web",
+      "l4_params": [
+        { "proto": 6, "port": [80, 80] },
+        { "proto": 6, "port": [443, 443] },
+        { "proto": 6, "port": [9000, 9000] }
+      ]
+    }
+  ],
+  "catch_all": "After the allows above are in the workspace, a lab catch-all of Deny covers clients the explicit deny missed. Confirm the approved edge still works before any production enforce."
+}
