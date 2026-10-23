@@ -69,6 +69,16 @@ What this leaves in place: a client that is still allowed, including the approve
 
 Details: [docs/contain-until-patched.md](docs/contain-until-patched.md).
 
+## Watch the PHP process tree
+
+Thanks to **Jeremy Hagerman** (Commercial Central SE) for the forensic rule, and to **Mike Delaguardia** for helping get it into the field.
+
+In Forensic Config, look for **PHP Suspicious Behavior**. The lab row that was captured is named `PHP2Pwnltest`. It records when `php-cgi` or `php-fpm` starts `sh`, `bash`, `cmd.exe`, `powershell.exe`, or a `py*` binary — a basic IOC in the PHP layer, not a CVE detector. **Forensics has to be enabled on the agent config intent** or the rule does not fire. Bind it to a forensic profile and an intent; a rule with zero profile tiles is not watching any host.
+
+This does not patch PHP and it does not replace the allow-list. It is a RECORD at CRITICAL when that child process shows up.
+
+Details: [docs/php-suspicious-behavior.md](docs/php-suspicious-behavior.md).
+
 ## Then confirm the update
 
 After the package upgrade or a confirmed vendor backport, refresh inventory and search again. The workload is remediated when the running package is a fixed build, not when the policy was published.
