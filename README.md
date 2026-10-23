@@ -75,7 +75,7 @@ Thanks to **Jeremy Hagerman** (Commercial Central SE) for the forensic rule, and
 
 In Forensic Config, look for **PHP Suspicious Behavior**. The lab row that was captured is named `PHP2Pwnltest`. It records when `php-cgi` or `php-fpm` starts `sh`, `bash`, `cmd.exe`, `powershell.exe`, or a `py*` binary — a basic IOC in the PHP layer, not a CVE detector. **Forensics has to be enabled on the agent config intent** or the rule does not fire. Bind it to a forensic profile and an intent; a rule with zero profile tiles is not watching any host.
 
-This does not patch PHP and it does not replace the allow-list. It is a RECORD at CRITICAL when that child process shows up.
+This does not patch PHP and it does not replace the allow-list. It is a RECORD at CRITICAL when that child process shows up. Stream that forensic alert into **Splunk or any SIEM of choice** so the SOC gets paged — syslog or Kafka from Secure Workload, then the SIEM’s own correlation.
 
 Details: [docs/php-suspicious-behavior.md](docs/php-suspicious-behavior.md).
 

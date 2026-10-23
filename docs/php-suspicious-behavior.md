@@ -51,8 +51,15 @@ That is a useful tripwire for someone messing around in the PHP layer. It will m
 3. Bind that profile with a forensic intent to the agent group that includes the PHP hosts (or the lab set you want to watch).
 4. On the **agent config** that those hosts use, turn **Forensics** on. Jeremy’s note: he applied the rule to anything in the lab, and it does not work unless Forensics is enabled on the config intent.
 5. After PHP-cgi or PHP-FPM starts a shell, look for a RECORD event at CRITICAL. There is no enforcement action in this rule — it records. Containment is still the allow-list in [contain-until-patched.md](contain-until-patched.md).
+6. Stream the forensic alert into **Splunk or any SIEM of choice** and alert the SOC. Secure Workload publishes forensic events as alerts over **syslog** or the **Kafka Data Tap**. The SIEM correlates and pages. This rule was not replayed into a live Splunk index on this page.
 
 Package visibility and Forensics are different switches. The inventory filter in [find-with-csw.md](find-with-csw.md) needs package visibility. This rule needs Forensics.
+
+## Alert the SOC
+
+A RECORD in Forensic Config stays in Secure Workload until you export it. Point the tenant’s alert publisher at Splunk or at another SIEM. The SOC then treats **PHP Suspicious Behavior** as any other CRITICAL host finding: ticket, hunt the child process, and keep the allow-list in place until PHP is updated.
+
+Do not describe the Splunk Secure Workload app as the enforcer. Observability and SOC alerting are what this feed is for. Quarantine is still an absolute Deny in the workspace, not a SIEM button.
 
 ## Limits
 
